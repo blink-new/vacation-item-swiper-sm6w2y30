@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Sun, ThumbsUp, ThumbsDown, Suitcase, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ThumbsUp, ThumbsDown, Sun, Suitcase, X } from 'lucide-react';
 
 // Define types
 interface VacationItem {
@@ -51,6 +51,41 @@ const vacationItems: VacationItem[] = [
     description: 'SPF 50 protection that\'s gentle on your skin and ocean-friendly.',
     image: 'https://images.unsplash.com/photo-1594122230689-45899d9e6f69?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
     category: 'toiletries'
+  },
+  {
+    id: '6',
+    name: 'Waterproof Phone Case',
+    description: 'Keep your phone safe during water activities. Touchscreen works underwater.',
+    image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    category: 'accessories'
+  },
+  {
+    id: '7',
+    name: 'Compact Travel Adapter',
+    description: 'Universal adapter works in over 150 countries. Includes USB ports for multiple devices.',
+    image: 'https://images.unsplash.com/photo-1621972660772-6a0427a5ec04?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    category: 'electronics'
+  },
+  {
+    id: '8',
+    name: 'Packable Sun Hat',
+    description: 'Foldable wide-brim hat that provides excellent sun protection and packs flat.',
+    image: 'https://images.unsplash.com/photo-1529958030586-3aae4ca485ff?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    category: 'clothing'
+  },
+  {
+    id: '9',
+    name: 'Travel-Size Dry Shampoo',
+    description: 'Refresh your hair between washes. Perfect for long travel days.',
+    image: 'https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    category: 'toiletries'
+  },
+  {
+    id: '10',
+    name: 'Inflatable Travel Pillow',
+    description: 'Ergonomic design for neck support during long flights. Packs down small when not in use.',
+    image: 'https://images.unsplash.com/photo-1520996729250-7d888a835cc4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+    category: 'essentials'
   }
 ];
 
@@ -61,32 +96,56 @@ function App() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
+
+  // Load saved items from localStorage on initial render
+  useEffect(() => {
+    const storedItems = localStorage.getItem('savedVacationItems');
+    if (storedItems) {
+      try {
+        setSavedItems(JSON.parse(storedItems));
+      } catch (error) {
+        console.error('Failed to parse saved items:', error);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever savedItems changes
+  useEffect(() => {
+    localStorage.setItem('savedVacationItems', JSON.stringify(savedItems));
+  }, [savedItems]);
 
   const currentItem = vacationItems[currentIndex];
   const isFinished = currentIndex >= vacationItems.length;
 
   const handleSwipe = (direction: 'left' | 'right') => {
-    if (direction === 'right') {
-      // Save the item
-      if (!savedItems.some(item => item.id === currentItem.id)) {
-        const newItem: SavedItem = {
-          ...currentItem,
-          savedAt: new Date()
-        };
-        setSavedItems([...savedItems, newItem]);
-        
-        // Show toast
-        setToastMessage(`${currentItem.name} added to your packing list!`);
-        setToastType('success');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
-      }
-    }
+    setSwipeDirection(direction);
     
-    // Move to next item
-    if (currentIndex < vacationItems.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
+    setTimeout(() => {
+      if (direction === 'right') {
+        // Save the item
+        if (!savedItems.some(item => item.id === currentItem.id)) {
+          const newItem: SavedItem = {
+            ...currentItem,
+            savedAt: new Date()
+          };
+          setSavedItems([...savedItems, newItem]);
+          
+          // Show toast
+          setToastMessage(`${currentItem.name} added to your packing list!`);
+          setToastType('success');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+        }
+      }
+      
+      // Move to next item
+      if (currentIndex < vacationItems.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+      }
+      
+      setSwipeDirection(null);
+    }, 300);
   };
 
   const removeItem = (id: string) => {
@@ -104,9 +163,9 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       {/* Header */}
-      <header className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white p-4 shadow-md">
+      <header className="header">
         <div className="container mx-auto">
           <div className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-2">
@@ -119,15 +178,15 @@ function App() {
             </div>
           </div>
           
-          <div className="flex bg-white/20 rounded-lg overflow-hidden">
+          <div className="flex gap-2">
             <button 
-              className={`flex-1 py-2 px-4 text-center transition-colors ${activeTab === 'discover' ? 'bg-white text-blue-600' : ''}`}
+              className={`tab-button ${activeTab === 'discover' ? 'active' : ''}`}
               onClick={() => setActiveTab('discover')}
             >
               Discover
             </button>
             <button 
-              className={`flex-1 py-2 px-4 text-center transition-colors ${activeTab === 'saved' ? 'bg-white text-blue-600' : ''}`}
+              className={`tab-button ${activeTab === 'saved' ? 'active' : ''}`}
               onClick={() => setActiveTab('saved')}
             >
               My List
@@ -139,96 +198,94 @@ function App() {
       {/* Main Content */}
       <main className="container mx-auto py-6 px-4">
         {activeTab === 'discover' ? (
-          <div className="relative h-[500px] w-full max-w-md mx-auto">
+          <div className="relative flex flex-col items-center">
             {isFinished ? (
-              <div className="flex flex-col items-center justify-center h-full bg-white rounded-2xl shadow-xl p-8 text-center">
+              <div className="all-done">
                 <h2 className="text-2xl font-bold mb-4">All done!</h2>
                 <p className="text-gray-600 mb-6">You've gone through all the vacation items.</p>
                 <button 
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="reset-button"
                   onClick={resetItems}
                 >
                   Start Over
                 </button>
               </div>
             ) : (
-              <div className="relative h-[400px] w-full">
-                <div className="absolute w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-                  <div className="relative h-[400px] w-full">
-                    <img 
-                      src={currentItem.image} 
-                      alt={currentItem.name} 
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                    
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
-                      <h2 className="text-xl font-bold mb-1">{currentItem.name}</h2>
-                      <p className="text-sm opacity-90 line-clamp-2">{currentItem.description}</p>
-                      <span className="inline-block mt-2 px-2 py-1 bg-white/20 rounded-full text-xs">
-                        {currentItem.category}
-                      </span>
+              <>
+                <div 
+                  className="swipe-card"
+                  style={{
+                    transform: swipeDirection === 'left' 
+                      ? 'translateX(-150%) rotate(-30deg)' 
+                      : swipeDirection === 'right' 
+                        ? 'translateX(150%) rotate(30deg)' 
+                        : 'translateX(0) rotate(0)'
+                  }}
+                >
+                  <img 
+                    src={currentItem.image} 
+                    alt={currentItem.name} 
+                  />
+                  <div className="swipe-card-content">
+                    <h2 className="text-xl font-bold mb-1">{currentItem.name}</h2>
+                    <p className="text-sm opacity-90">{currentItem.description}</p>
+                    <div className="category-tag">
+                      {currentItem.category}
                     </div>
                   </div>
                 </div>
                 
-                <div className="absolute bottom-[-80px] left-0 right-0 flex justify-center gap-8">
+                <div className="swipe-buttons">
                   <button 
-                    className="rounded-full h-16 w-16 bg-white border-2 border-red-400 text-red-500 flex items-center justify-center shadow-lg hover:bg-red-50 transition-colors"
+                    className="swipe-button swipe-button-reject"
                     onClick={() => handleSwipe('left')}
                   >
-                    <ThumbsDown className="h-8 w-8" />
+                    <ThumbsDown size={24} />
                   </button>
                   
                   <button 
-                    className="rounded-full h-16 w-16 bg-white border-2 border-green-400 text-green-500 flex items-center justify-center shadow-lg hover:bg-green-50 transition-colors"
+                    className="swipe-button swipe-button-accept"
                     onClick={() => handleSwipe('right')}
                   >
-                    <ThumbsUp className="h-8 w-8" />
+                    <ThumbsUp size={24} />
                   </button>
                 </div>
-              </div>
+              </>
             )}
           </div>
         ) : (
           <div className="max-w-md mx-auto">
-            <h2 className="text-2xl font-bold mb-4 text-gray-800">My Packing List</h2>
+            <h2 className="text-2xl font-bold mb-4">My Packing List</h2>
             {savedItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[300px] text-center p-4 bg-white rounded-lg shadow-sm">
-                <h3 className="text-xl font-medium text-gray-500 mb-2">No saved items yet</h3>
-                <p className="text-gray-400">Swipe right on items you want to pack for your trip!</p>
+              <div className="empty-state">
+                <h3 className="text-xl font-medium mb-2">No saved items yet</h3>
+                <p>Swipe right on items you want to pack for your trip!</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div>
                 {savedItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex gap-3 bg-white rounded-lg overflow-hidden shadow-sm border border-gray-100"
-                  >
+                  <div key={item.id} className="saved-item">
                     <img 
                       src={item.image} 
                       alt={item.name} 
-                      className="h-24 w-24 object-cover"
                     />
-                    <div className="flex-1 p-3 pr-2">
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-medium">{item.name}</h3>
-                        <button 
-                          className="h-8 w-8 text-gray-400 hover:text-red-500 flex items-center justify-center"
-                          onClick={() => removeItem(item.id)}
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                      <p className="text-sm text-gray-500 line-clamp-2 mt-1">{item.description}</p>
-                      <div className="flex justify-between items-center mt-1">
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    <div className="saved-item-content">
+                      <h3 className="font-medium">{item.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+                      <div className="flex justify-between items-center mt-2">
+                        <div className="category-tag">
                           {item.category}
-                        </span>
+                        </div>
                         <span className="text-xs text-gray-400">
                           {new Date(item.savedAt).toLocaleDateString()}
                         </span>
                       </div>
+                      <button 
+                        className="remove-button"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <X size={16} />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -240,7 +297,7 @@ function App() {
       
       {/* Toast */}
       {showToast && (
-        <div className={`fixed bottom-4 right-4 px-4 py-3 rounded-lg shadow-lg text-white ${toastType === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+        <div className={`toast ${toastType === 'success' ? 'toast-success' : 'toast-error'}`}>
           {toastMessage}
         </div>
       )}
