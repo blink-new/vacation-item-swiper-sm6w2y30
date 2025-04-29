@@ -1,6 +1,5 @@
 
 import { Suitcase, Sun } from 'lucide-react';
-import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 
 interface HeaderProps {
   activeTab: string;
@@ -23,22 +22,20 @@ export function Header({ activeTab, onTabChange, savedItemsCount }: HeaderProps)
           </div>
         </div>
         
-        <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-          <TabsList className="w-full bg-white/20">
-            <TabsTrigger 
-              value="discover" 
-              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600"
-            >
-              Discover
-            </TabsTrigger>
-            <TabsTrigger 
-              value="saved" 
-              className="flex-1 data-[state=active]:bg-white data-[state=active]:text-blue-600"
-            >
-              My List
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex bg-white/20 rounded-lg overflow-hidden">
+          <button 
+            className={`flex-1 py-2 px-4 text-center transition-colors ${activeTab === 'discover' ? 'bg-white text-blue-600' : ''}`}
+            onClick={() => onTabChange('discover')}
+          >
+            Discover
+          </button>
+          <button 
+            className={`flex-1 py-2 px-4 text-center transition-colors ${activeTab === 'saved' ? 'bg-white text-blue-600' : ''}`}
+            onClick={() => onTabChange('saved')}
+          >
+            My List
+          </button>
+        </div>
       </div>
     </header>
   );
