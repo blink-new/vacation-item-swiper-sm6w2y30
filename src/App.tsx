@@ -5,14 +5,13 @@ import { SwipeDeck } from './components/SwipeDeck';
 import { SavedItemsList } from './components/SavedItemsList';
 import { vacationItems } from './data/vacationItems';
 import { VacationItem, SavedItem } from './types';
-import { Toaster } from './components/ui/toaster';
-import { useToast } from './hooks/use-toast';
+import { Toaster } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 
 function App() {
   const [activeTab, setActiveTab] = useState('discover');
   const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
-  const { toast } = useToast();
 
   // Load saved items from localStorage on initial render
   useEffect(() => {
@@ -42,23 +41,14 @@ function App() {
         
         setSavedItems(prev => [...prev, newSavedItem]);
         
-        toast({
-          title: "Item saved!",
-          description: `${item.name} added to your packing list.`,
-          variant: "default",
-        });
+        toast.success(`${item.name} added to your packing list!`);
       }
     }
   };
 
   const handleRemoveSavedItem = (id: string) => {
     setSavedItems(prev => prev.filter(item => item.id !== id));
-    
-    toast({
-      title: "Item removed",
-      description: "Item removed from your packing list.",
-      variant: "destructive",
-    });
+    toast.error("Item removed from your packing list");
   };
 
   return (
@@ -98,7 +88,7 @@ function App() {
         </AnimatePresence>
       </main>
       
-      <Toaster />
+      <Toaster position="top-right" />
     </div>
   );
 }
