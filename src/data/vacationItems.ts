@@ -33,7 +33,7 @@ export const vacationItems: VacationItem[] = [
   {
     id: '5',
     name: 'Reef-Safe Sunscreen',
-    description: 'SPF 50 protection that's gentle on your skin and ocean-friendly.',
+    description: 'SPF 50 protection that\'s gentle on your skin and ocean-friendly.',
     image: 'https://images.unsplash.com/photo-1594122230689-45899d9e6f69?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
     category: 'toiletries'
   },
