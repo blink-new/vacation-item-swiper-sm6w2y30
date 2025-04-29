@@ -1,7 +1,7 @@
 
-import { useState, useRef } from 'react';
-import { VacationItem } from '../types';
+import { motion, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { Check, X } from 'lucide-react';
+import { VacationItem } from '../types';
 import { cn } from '../lib/utils';
 
 interface SwipeCardProps {
@@ -11,117 +11,44 @@ interface SwipeCardProps {
 }
 
 export function SwipeCard({ item, onSwipe, active }: SwipeCardProps) {
-  const [direction, setDirection] = useState<'left' | 'right' | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const startX = useRef(0);
-  const currentX = useRef(0);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const rotate = useTransform(x, [-200, 200], [-25, 25]);
   
-  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!active) return;
-    startX.current = e.touches[0].clientX;
-    setIsDragging(true);
-  };
-  
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!active) return;
-    startX.current = e.clientX;
-    setIsDragging(true);
-  };
-  
-  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
-    if (!isDragging || !active) return;
-    currentX.current = e.touches[0].clientX - startX.current;
-    updateCardPosition(currentX.current);
-    
-    if (currentX.current > 50) {
-      setDirection('right');
-    } else if (currentX.current < -50) {
-      setDirection('left');
-    } else {
-      setDirection(null);
+  // Transform values for the decision indicators
+  const rightOpacity = useTransform(x, [0, 100], [0, 1]);
+  const leftOpacity = useTransform(x, [-100, 0], [1, 0]);
+
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (Math.abs(info.offset.x) > 100) {
+      const direction = info.offset.x > 0 ? 'right' : 'left';
+      onSwipe(direction, item);
     }
   };
-  
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !active) return;
-    currentX.current = e.clientX - startX.current;
-    updateCardPosition(currentX.current);
-    
-    if (currentX.current > 50) {
-      setDirection('right');
-    } else if (currentX.current < -50) {
-      setDirection('left');
-    } else {
-      setDirection(null);
-    }
-  };
-  
-  const handleDragEnd = () => {
-    if (!isDragging || !active) return;
-    setIsDragging(false);
-    
-    if (Math.abs(currentX.current) > 100) {
-      const swipeDirection = currentX.current > 0 ? 'right' : 'left';
-      completeSwipe(swipeDirection);
-      onSwipe(swipeDirection, item);
-    } else {
-      resetCardPosition();
-    }
-  };
-  
-  const updateCardPosition = (x: number) => {
-    if (!cardRef.current) return;
-    const rotate = x * 0.1; // Adjust rotation based on drag distance
-    cardRef.current.style.transform = `translateX(${x}px) rotate(${rotate}deg)`;
-  };
-  
-  const resetCardPosition = () => {
-    if (!cardRef.current) return;
-    cardRef.current.style.transition = 'transform 0.3s ease';
-    cardRef.current.style.transform = 'translateX(0) rotate(0)';
-    setTimeout(() => {
-      if (cardRef.current) {
-        cardRef.current.style.transition = '';
-      }
-    }, 300);
-    setDirection(null);
-  };
-  
-  const completeSwipe = (direction: 'left' | 'right') => {
-    if (!cardRef.current) return;
-    const targetX = direction === 'right' ? window.innerWidth + 200 : -window.innerWidth - 200;
-    cardRef.current.style.transition = 'transform 0.5s ease';
-    cardRef.current.style.transform = `translateX(${targetX}px) rotate(${direction === 'right' ? 30 : -30}deg)`;
-  };
-  
+
   const handleButtonSwipe = (direction: 'left' | 'right') => {
     if (!active) return;
-    completeSwipe(direction);
     onSwipe(direction, item);
   };
 
   return (
-    <div
-      ref={cardRef}
+    <motion.div
       className={cn(
         "absolute w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden",
         "transition-all duration-300 ease-out",
         active ? "z-10" : "z-0 scale-95 opacity-80"
       )}
       style={{ 
+        x, 
+        rotate,
         top: 0,
         left: 0,
         right: 0,
         margin: 'auto',
       }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleDragEnd}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleDragEnd}
-      onMouseLeave={handleDragEnd}
+      drag={active ? "x" : false}
+      dragConstraints={{ left: 0, right: 0 }}
+      onDragEnd={handleDragEnd}
+      whileTap={{ scale: 1.05 }}
     >
       <div className="relative h-[400px] w-full">
         <img 
@@ -132,22 +59,22 @@ export function SwipeCard({ item, onSwipe, active }: SwipeCardProps) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
         
         {/* Decision indicators */}
-        <div className={cn(
-          "absolute top-4 right-4 transition-opacity duration-200",
-          direction === 'right' ? "opacity-100" : "opacity-0"
-        )}>
-          <div className="bg-green-500 text-white rounded-full p-2">
+        <div className="absolute top-4 right-4">
+          <motion.div 
+            className="bg-green-500 text-white rounded-full p-2"
+            style={{ opacity: rightOpacity }}
+          >
             <Check size={24} />
-          </div>
+          </motion.div>
         </div>
         
-        <div className={cn(
-          "absolute top-4 left-4 transition-opacity duration-200",
-          direction === 'left' ? "opacity-100" : "opacity-0"
-        )}>
-          <div className="bg-red-500 text-white rounded-full p-2">
+        <div className="absolute top-4 left-4">
+          <motion.div 
+            className="bg-red-500 text-white rounded-full p-2"
+            style={{ opacity: leftOpacity }}
+          >
             <X size={24} />
-          </div>
+          </motion.div>
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
@@ -176,6 +103,6 @@ export function SwipeCard({ item, onSwipe, active }: SwipeCardProps) {
           </button>
         </div>
       )}
-    </div>
+    </motion.div>
   );
 }
